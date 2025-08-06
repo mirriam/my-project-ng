@@ -1492,9 +1492,8 @@ def scrape_job_details(job_url):
 def crawl_and_process():
     nigeria_processed_job_ids, processed_job_urls, processed_companies = load_nigeria_processed_job_ids()
     print(f"Loaded {len(nigeria_processed_job_ids)} previously processed Job IDs, {len(processed_job_urls)} URLs, and {len(processed_companies)} companies")
-    start_page = max(load_last_processed_page(), 1)
-print(f"Debug: start_page set to {start_page}")
-for i in range(start_page, 5, -1): # Start from page 1, end at page 5
+    # Define the page range to scrape (pages 1 to 5)
+    for i in range(1, 6):ge 1, end at page 5
         url = f'https://www.myjobmag.com/page/{i}'
         try:
             resp = requests.get(url, headers=HEADERS, timeout=10)
