@@ -72,7 +72,7 @@ WP_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job-listings"
 WP_COMPANY_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/company"
 WP_MEDIA_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/media"
 WP_USERNAME = "admin"
-WP_APP_PASSWORD = "Xljs I1VY 7XL0 F45N 3Wsv 5qcv"
+WP_APP_PASSWORD = "GFrL htgc j7a1 pjin xUqS 1FJU"
 PROCESSED_IDS_FILE = "nigeria_processed_job_ids.csv"
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36'
