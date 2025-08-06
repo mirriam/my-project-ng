@@ -54,8 +54,6 @@ except LookupError:
 tool = language_tool_python.LanguageTool('en-US')
 
 
-
-
 # Initialize model and tokenizer
 device = torch.device("cpu")  # Always CPU
 model_name = "google/flan-t5-large"
@@ -74,8 +72,8 @@ MAX_RETURN_SEQUENCES = 4
 WP_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job-listings"
 WP_COMPANY_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/company"
 WP_MEDIA_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/media"
-WP_USERNAME = "mary"
-WP_APP_PASSWORD = "GFrL htgc j7a1 pjin xUqS 1FJU"
+WP_USERNAME = "admin"
+WP_APP_PASSWORD = "Xljs I1VY 7XL0 F45N 3Wsv 5qcv"
 PROCESSED_IDS_FILE = "nigeria_processed_job_ids.csv"
 LAST_PAGE_FILE = "last_processed_page.txt"
 HEADERS = {
@@ -191,7 +189,8 @@ def paraphrase_strict_title(title, max_attempts=3, max_sub_attempts=2):
             "Rewrite the following", "Paraphrased title", "Professionally rewrite",
             "Keep it short", "Use different phrasing", "Short (5–12 words)",
             "Paraphrase", "Paraphrased", "Paraphrasing", "Paraphrased version",
-            "Summary", "Summarised", "Summarized", "Summarizing", "Summarising","None."
+            "Summary", "Summarised", "Summarized", "Summarizing", "Summarising","None.","None","none",
+            ".",":"
         ]
         for phrase in critical_phrases:
             if phrase.lower() in text_lower:
@@ -912,7 +911,6 @@ def load_last_processed_page():
         print(f"Error reading {LAST_PAGE_FILE}: {str(e)}. Defaulting to page 1.")
         return 1
 
-
 def validate_application_method(value, is_email=False):
     if not value:
         return False
@@ -1255,7 +1253,10 @@ def save_company_to_wordpress(index, company_data):
 def save_article_to_wordpress(index, job_data, rewritten_title, rewritten_description, application):
     auth_string = f"{WP_USERNAME}:{WP_APP_PASSWORD}"
     auth = base64.b64encode(auth_string.encode()).decode()
-    headers = {"Authorization": f"Basic {auth}", "Content-Type": "application/json"}
+    headers = {
+        "Authorization": f"Basic {auth}",
+        "Content-Type": "application/json"
+    }
     initialize_job_type_terms(auth, headers)
     location_value = sanitize_text(job_data.get("Location", "Remote"))
     job_type_value = sanitize_text(job_data.get("Job Type", "Full-time"))
@@ -1280,17 +1281,13 @@ def save_article_to_wordpress(index, job_data, rewritten_title, rewritten_descri
         posts = response.json()
         if posts:
             post = posts[0]
-            logger.info(f"Job {index + 1} (Job ID: {job_id}) already exists: Post ID {post.get('id')}, URL {post.get('link')}")
-            print(f"Skipping job {index + 1}: Already exists with Post ID {post.get('id')}, URL {post.get('link')}")
-            save_processed_job_id(job_id, job_url, company_name, job_data.get("URL Page", ""), job_data.get("Job Number", ""))
+            logger.info(f"Job {index + 1} (Job ID: {job_id}) already exists in WordPress: Post ID {post.get('id')}, URL {post.get('link')}")
+            print(f"Skipping job {index + 1}: Already exists in WordPress with Post ID {post.get('id')}, URL {post.get('link')}")
+            save_processed_job_id(job_id, job_url, company_name)
             return post.get("id"), post.get("link")
     except RequestException as e:
         logger.warning(f"Error checking for existing job {index + 1}: {str(e)}. Proceeding to create new post.")
-    attachment_id = None
-    if logo_url:
-        attachment_id = upload_logo_to_media_library(logo_url, auth, headers)
-    else:
-        logger.info(f"No valid logo URL for job {index + 1}. Skipping logo upload.")
+    attachment_id = upload_logo_to_media_library(logo_url, auth, headers)
     region_term_id = get_region_term_id(location_value, auth, headers)
     job_type_term_id = get_job_type_term_id(job_type_value, auth, headers)
     if company_name == "Unknown Company":
@@ -1325,21 +1322,38 @@ def save_article_to_wordpress(index, job_data, rewritten_title, rewritten_descri
     logger.debug(f"Sending job payload to WordPress for job {index + 1}: {json.dumps(post_data, indent=2)}")
     max_retries = 3
     for attempt in range(max_retries):
+        response = None
         try:
             response = session.post(WP_URL, json=post_data, headers=headers, timeout=15, verify=False)
             response.raise_for_status()
             post = response.json()
-            logger.info(f"Successfully posted job {index + 1}: Post ID {post.get('id')}, URL {post.get('link')}")
+            logger.info(f"Successfully posted job {index + 1} to WordPress: Post ID {post.get('id')}, URL {post.get('link')}")
             print(f"\nStep 4: Published Job to WordPress")
             print("-" * 30)
             print(f"Job Post ID: {post.get('id')}")
             print(f"Job Post URL: {post.get('link')}")
-            save_processed_job_id(job_id, job_url, company_name, job_data.get("URL Page", ""), job_data.get("Job Number", ""))
+            save_processed_job_id(job_id, job_url, company_name)
             return post.get("id"), post.get("link")
         except RequestException as e:
-            logger.error(f"Attempt {attempt + 1} failed for job {index + 1}: {str(e)}")
-            print(f"Attempt {attempt + 1} failed for job {index + 1}: {e}")
+            logger.error(f"Attempt {attempt + 1} failed for job {index + 1}: {e}, Status: {response.status_code if response else 'None'}, Response: {response.text if response else 'None'}")
+            print(f"\nStep 4: Attempt {attempt + 1} failed for job {index + 1}: {e}")
+            print(f"Response: {response.text if response else 'No response'}")
+            print(f"Status Code: {response.status_code if response else 'No status code'}")
+            print(f"Response Headers: {response.headers if response else 'No headers'}")
+            try:
+                check_response = session.get(check_url, headers=headers, timeout=10, verify=False)
+                if check_response.status_code == 200:
+                    posts = check_response.json()
+                    if posts:
+                        post = posts[0]
+                        logger.info(f"Job {index + 1} (Job ID: {job_id}) was created despite error: Post ID {post.get('id')}, URL {post.get('link')}")
+                        print(f"Job {index + 1} was created despite error: Post ID {post.get('id')}, URL {post.get('link')}")
+                        save_processed_job_id(job_id, job_url, company_name)
+                        return post.get("id"), post.get("link")
+            except RequestException as check_e:
+                logger.error(f"Error checking for existing job after failed POST attempt {attempt + 1}: {check_e}")
             if attempt < max_retries - 1:
+                logger.info(f"Retrying job {index + 1} after {2 ** attempt} seconds...")
                 time.sleep(2 ** attempt)
     logger.error(f"Failed to post job {index + 1} after {max_retries} attempts.")
     print(f"Failed to post job {index + 1} after {max_retries} attempts.")
@@ -1493,7 +1507,7 @@ def crawl_and_process():
     nigeria_processed_job_ids, processed_job_urls, processed_companies = load_nigeria_processed_job_ids()
     print(f"Loaded {len(nigeria_processed_job_ids)} previously processed Job IDs, {len(processed_job_urls)} URLs, and {len(processed_companies)} companies")
     start_page = max(load_last_processed_page(), 1)  # Ensure starting page is at least 1
-    for i in range(start_page, 5, -1):  # Start from page 1, end at page 5
+for i in range(start_page, 5, -1):  # Start from page 1, end at page 5
         url = f'https://www.myjobmag.com/page/{i}'
         try:
             resp = requests.get(url, headers=HEADERS, timeout=10)
@@ -1577,5 +1591,8 @@ def main():
         crawl_and_process()
         cycle_count += 1
         print(f"\nAll jobs processed for cycle {cycle_count}. Waiting 5 minutes before starting the next cycle...")
-        time.sleep(300)
+        time.sleep(7200)  # 2 hours in seconds
     print("Reached maximum cycles. Exiting.")
+
+if __name__ == "__main__":
+    main()
