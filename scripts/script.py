@@ -1581,7 +1581,7 @@ for i in range(start_page, 5, -1):  # Start from page 1, end at page 5
             logger.error(f"Error crawling page {url}: {str(e)}")
             save_last_processed_page(i)
             continue
-    save_last_processed_page(0)
+    
 
 def main():
     max_cycles = 10
