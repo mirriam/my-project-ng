@@ -68,12 +68,12 @@ similarity_model = SentenceTransformer('all-MiniLM-L6-v2', device='cpu')
 # Constants
 MAX_TOTAL_TOKENS = 3000
 MAX_RETURN_SEQUENCES = 4
-WP_URL = "https://southafrica.mimusjobs.com/wp-json/wp/v2/job-listings"
-WP_COMPANY_URL = "https://southafrica.mimusjobs.com/wp-json/wp/v2/company"
-WP_MEDIA_URL = "https://southafrica.mimusjobs.com/wp-json/wp/v2/media"
+WP_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job-listings"
+WP_COMPANY_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/company"
+WP_MEDIA_URL = "https://nigeria.mimusjobs.com/wp-json/wp/v2/media"
 WP_USERNAME = "admin"
 WP_APP_PASSWORD = "Xljs I1VY 7XL0 F45N 3Wsv 5qcv"
-PROCESSED_IDS_FILE = "southafrica_processed_job_ids.csv"
+PROCESSED_IDS_FILE = "nigeria_processed_job_ids.csv"
 HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36'
 }
@@ -827,7 +827,7 @@ def paraphrase_strict_description(text, max_attempts=2, max_sub_attempts=2):
 
     return "\n\n".join(final_paraphrased)
 
-def load_southafrica_processed_job_ids():
+def load_nigeria_processed_job_ids():
     if not os.path.exists(PROCESSED_IDS_FILE):
         logger.info(f"{PROCESSED_IDS_FILE} does not exist. Initializing empty sets.")
         return set(), set(), set()
@@ -1052,7 +1052,7 @@ def paraphrase_title_and_description(title, description, index, max_attempts=5):
     return print_word_by_word(f"Job Title: {rewritten_title}\n\nJob Description:\n{rewritten_description}"), rewritten_title, rewritten_description
 
 def get_region_term_id(location_value, auth, headers):
-    taxonomy_url = "https://southafrica.mimusjobs.com/wp-json/wp/v2/job_listing_region"
+    taxonomy_url = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job_listing_region"
     location_slug = location_value.lower().replace(' ', '-')
     try:
         response = requests.get(f"{taxonomy_url}?slug={location_slug}", headers=headers, timeout=10, verify=False)
@@ -1075,7 +1075,7 @@ def get_region_term_id(location_value, auth, headers):
         return None
 
 def get_job_type_term_id(job_type_value, auth, headers):
-    taxonomy_url = "https://southafrica.mimusjobs.com/wp-json/wp/v2/job_listing_type"
+    taxonomy_url = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job_listing_type"
     job_type_slug = job_type_value.lower().replace(' ', '-')
     try:
         response = requests.get(f"{taxonomy_url}?slug={job_type_slug}", headers=headers, timeout=10, verify=False)
@@ -1098,7 +1098,7 @@ def get_job_type_term_id(job_type_value, auth, headers):
         return None
 
 def initialize_job_type_terms(auth, headers):
-    taxonomy_url = "https://southafrica.mimusjobs.com/wp-json/wp/v2/job_listing_type"
+    taxonomy_url = "https://nigeria.mimusjobs.com/wp-json/wp/v2/job_listing_type"
     for job_type, slug in JOB_TYPE_MAPPING.items():
         try:
             response = requests.get(f"{taxonomy_url}?slug={slug}", headers=headers, timeout=10, verify=False)
@@ -1381,7 +1381,7 @@ def scrape_job_details(job_url):
         application_url = application_url_elem.get('href', '') if application_url_elem else ""
         if application_url:
             if application_url.startswith('/'):
-                application_url = 'https://www.myjobmag.co.za' + application_url
+                application_url = 'https://www.myjobmag.com' + application_url
             application_url = clean_application_url(application_url)
             if not validate_application_method(application_url):
                 application_url = ""
@@ -1389,7 +1389,7 @@ def scrape_job_details(job_url):
         application = application_url if application_url else extracted_email if extracted_email else ""
         if not application:
             logger.warning(f"No valid application method extracted for job URL: {job_url}")
-        company_urls = ['https://www.myjobmag.co.za' + a.get('href') for a in soup.select('#printable > a') if a.get('href')]
+        company_urls = ['https://www.myjobmag.com' + a.get('href') for a in soup.select('#printable > a') if a.get('href')]
         company_data = {}
         if company_urls:
             try:
@@ -1397,7 +1397,7 @@ def scrape_job_details(job_url):
                 company_resp.raise_for_status()
                 company_soup = BeautifulSoup(company_resp.text, 'html.parser')
                 company_data['company_name'] = company_soup.select_one('#wrap-comp-jobs > div.company-jobs > h1').text.replace("Recruitment", "").strip() if company_soup.select_one('#wrap-comp-jobs > div.company-jobs > h1') else company_name
-                company_data['company_logo'] = ['https://www.myjobmag.co.za' + img.get('src') for img in company_soup.select('#wrap-comp-jobs > div.company-jobs > div.company-logo > img') if img.get('src') and (img.get('src').lower().endswith('.png') or img.get('src').lower().endswith('.jpg') or img.get('src').lower().endswith('.jpeg'))]
+                company_data['company_logo'] = ['https://www.myjobmag.com' + img.get('src') for img in company_soup.select('#wrap-comp-jobs > div.company-jobs > div.company-logo > img') if img.get('src') and (img.get('src').lower().endswith('.png') or img.get('src').lower().endswith('.jpg') or img.get('src').lower().endswith('.jpeg'))]
                 company_data['company_industry'] = company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(1) > span.comp-info-desc > a').text.strip() if company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(1) > span.comp-info-desc > a') else ""
                 company_data['company_founded'] = company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(2) > span.comp-info-desc').text.strip() if company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(2) > span.comp-info-desc') else ""
                 company_data['company_type'] = company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(3) > span.comp-info-desc').text.strip() if company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(3) > span.comp-info-desc') else ""
@@ -1409,7 +1409,7 @@ def scrape_job_details(job_url):
                     website_text_elem = company_soup.select_one('#wrap-comp-jobs > div.company-jobs > div.company-details-right > ul > li:nth-child(4) > span.comp-info-desc')
                     if website_text_elem:
                         company_website = website_text_elem.text.strip()
-                excluded_domains = ['mysalaryscale.com', 'myjobmag.co.za', 'linkedin.com', 'twitter.com', 'facebook.com']
+                excluded_domains = ['mysalaryscale.com', 'myjobmag.com', 'linkedin.com', 'twitter.com', 'facebook.com']
                 if company_website:
                     company_website = clean_application_url(company_website)
                     if any(domain in company_website for domain in excluded_domains) or not validate_application_method(company_website):
@@ -1466,17 +1466,17 @@ def scrape_job_details(job_url):
         return None, None
 
 def crawl_and_process():
-    southafrica_processed_job_ids, processed_job_urls, processed_companies = load_southafrica_processed_job_ids()
-    print(f"Loaded {len(southafrica_processed_job_ids)} previously processed Job IDs, {len(processed_job_urls)} URLs, and {len(processed_companies)} companies")
+    nigeria_processed_job_ids, processed_job_urls, processed_companies = load_nigeria_processed_job_ids()
+    print(f"Loaded {len(nigeria_processed_job_ids)} previously processed Job IDs, {len(processed_job_urls)} URLs, and {len(processed_companies)} companies")
     
     # Define the page range to scrape (pages 1 to 5)
     for i in range(1, 6):
-        url = f'https://www.myjobmag.co.za/page/{i}'
+        url = f'https://www.myjobmag.com/page/{i}'
         try:
             resp = requests.get(url, headers=HEADERS, timeout=10)
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, 'html.parser')
-            job_links = ['https://www.myjobmag.co.za' + a.get('href') for a in soup.select('li.mag-b > h2 > a') if a.get('href')]
+            job_links = ['https://www.myjobmag.com' + a.get('href') for a in soup.select('li.mag-b > h2 > a') if a.get('href')]
             print(f"Collected {len(job_links)} job URLs from page {i}")
             for index, job_url in enumerate(job_links):
                 job_number = index + 1
@@ -1503,7 +1503,7 @@ def crawl_and_process():
                 if not job_id or pd.isna(job_id):
                     print(f"Skipping job {job_number}: Empty or invalid Job ID.")
                     continue
-                if job_id in southafrica_processed_job_ids:
+                if job_id in nigeria_processed_job_ids:
                     print(f"Skipping job {job_number}: Job ID {job_id} already processed.")
                     continue
                 if not job_title or pd.isna(job_title):
