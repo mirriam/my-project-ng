@@ -894,22 +894,8 @@ def save_last_processed_page(page_number):
         print(f"Error saving last processed page {page_number}: {str(e)}")
 
 def load_last_processed_page():
-    if not os.path.exists(LAST_PAGE_FILE):
-        logger.info(f"{LAST_PAGE_FILE} does not exist. Defaulting to page 1.")
-        return 1
-    try:
-        with open(LAST_PAGE_FILE, 'r') as f:
-            page = f.read().strip()
-            page_number = int(page)
-            if page_number < 1 or page_number > 5:
-                logger.warning(f"Invalid page number {page_number} in {LAST_PAGE_FILE}. Defaulting to page 1.")
-                return 1
-            logger.info(f"Loaded last processed page: {page_number} from {LAST_PAGE_FILE}")
-            return page_number
-    except (ValueError, Exception) as e:
-        logger.error(f"Error reading {LAST_PAGE_FILE}: {str(e)}. Defaulting to page 1.")
-        print(f"Error reading {LAST_PAGE_FILE}: {str(e)}. Defaulting to page 1.")
-        return 1
+    logger.info("Starting from page 5 as per configuration.")
+    return 1
 
 def validate_application_method(value, is_email=False):
     if not value:
